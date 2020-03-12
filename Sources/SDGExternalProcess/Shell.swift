@@ -21,7 +21,6 @@
 
   /// A command line shell.
   public final class Shell: TransparentWrapper {
-
     // MARK: - Static Properties
 
     /// The default shell.
@@ -101,11 +100,11 @@
       in workingDirectory: URL? = nil,
       with environment: [String: String]? = nil,
       autoquote: Bool = true,
+      on osProcess: Process = Process(),
       reportProgress: (_ line: String) -> Void = { _ in }
-    ) -> Result<String, ExternalProcess.Error> {  // @exempt(from: tests)
-
-      let commandString = command.map({ (argument: String) -> String in
-        if isCMD ∧ command.first == "echo" {  // @exempt(from: tests) cmd is only on Windows.
+    ) -> Result<String, ExternalProcess.Error> { // @exempt(from: tests)
+      let commandString = command.map { (argument: String) -> String in
+        if isCMD ∧ command.first == "echo" { // @exempt(from: tests) cmd is only on Windows.
           return argument
         }
         if autoquote ∧ Shell.argumentNeedsQuotationMarks(argument) {
@@ -113,17 +112,17 @@
         } else {
           return argument
         }
-      }).joined(separator: " ")  // @exempt(from: tests) False result in Xcode 9.3.
+      }.joined(separator: " ") // @exempt(from: tests) False result in Xcode 9.3.
 
       reportProgress("$ " + commandString)
 
       let executionOption: String
-      if isCMD {  // @exempt(from: tests) cmd is only on Windows.
+      if isCMD { // @exempt(from: tests) cmd is only on Windows.
         executionOption = "/c"
       } else {
         executionOption = "\u{2D}c"
       }
-      return process.run([executionOption, commandString], in: workingDirectory, with: environment)
+      return process.run([executionOption, commandString], in: workingDirectory, with: environment, on: osProcess)
       {
         reportProgress($0)
       }

@@ -17,13 +17,12 @@
   import Foundation
 
   import SDGControlFlow
+  import SDGLocalization
   import SDGLogic
   import SDGPersistence
-  import SDGLocalization
 
   /// An external process.
   public final class ExternalProcess: TextualPlaygroundDisplay {
-
     // MARK: - Initialization
 
     /// Creates an instance with the executable at the specified location.
@@ -46,7 +45,6 @@
       commandName: String?,
       validate: (_ process: ExternalProcess) -> Bool
     ) where S: Sequence, S.Element == URL {
-
       func checkLocation(_ location: URL, validate: (ExternalProcess) -> Bool) -> Bool {
         var isDirectory: ObjCBool = false
         if ¬FileManager.default.fileExists(atPath: location.path, isDirectory: &isDirectory) {
@@ -67,7 +65,7 @@
 
       for location in locations {
         if checkLocation(location, validate: validate) {
-          self.init(at: location)  // @exempt(from: tests) False coverage result in Xcode 10.1.
+          self.init(at: location) // @exempt(from: tests) False coverage result in Xcode 10.1.
           return
         }
       }
@@ -79,8 +77,7 @@
         searchCommand = "which"
       #endif
       if let name = commandName,
-        let path = try? Shell.default.run(command: [searchCommand, name]).get()
-      {
+        let path = try? Shell.default.run(command: [searchCommand, name]).get() {
         let location = URL(fileURLWithPath: path)
         if checkLocation(location, validate: validate) {
           self.init(at: location)
@@ -110,15 +107,12 @@
       _ arguments: [String],
       in workingDirectory: URL? = nil,
       with environment: [String: String]? = nil,
+      on process: Process = Process(),
       reportProgress: (_ line: String) -> Void = { _ in }
     ) -> Result<String, ExternalProcess.Error> {
-
-      let process = Process()
-
       #if os(macOS)
-        if #available(macOS 10.13, *),  // @exempt(from: unicode)
-          ¬legacyMode
-        {
+        if #available(macOS 10.13, *), // @exempt(from: unicode)
+          ¬legacyMode {
           process.executableURL = executable
         } else {
           process.launchPath = executable.path
@@ -134,9 +128,8 @@
 
       if let location = workingDirectory {
         #if os(macOS)
-          if #available(macOS 10.13, *),  // @exempt(from: unicode)
-            ¬legacyMode
-          {
+          if #available(macOS 10.13, *), // @exempt(from: unicode)
+            ¬legacyMode {
             process.currentDirectoryURL = location
           } else {
             process.currentDirectoryPath = location.path
@@ -150,15 +143,14 @@
       process.standardOutput = pipe
       process.standardError = pipe
 
-      #if !os(Linux)  // #workaround(Swift 5.1.3, Linux will gain this property in 5.2.)
+      #if !os(Linux) // #workaround(Swift 5.1.3, Linux will gain this property in 5.2.)
         process.qualityOfService = Thread.current.qualityOfService
       #endif
 
       do {
         #if os(macOS)
-          if #available(macOS 10.13, *),  // @exempt(from: unicode)
-            ¬legacyMode
-          {
+          if #available(macOS 10.13, *), // @exempt(from: unicode)
+            ¬legacyMode {
             try process.run()
           } else {
             _ = try executable.checkResourceIsReachable()
@@ -205,12 +197,12 @@
         }
       }
 
-      while process.isRunning {}  // @exempt(from: tests)
+      while process.isRunning {} // @exempt(from: tests)
 
       if output.scalars.last == "\n" {
         output.scalars.removeLast()
       }
-      if output.scalars.last == "\r" {  // @exempt(from: tests) Windows only.
+      if output.scalars.last == "\r" { // @exempt(from: tests) Windows only.
         output.scalars.removeLast()
       }
 
