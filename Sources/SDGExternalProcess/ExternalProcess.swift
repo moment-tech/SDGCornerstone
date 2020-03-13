@@ -174,28 +174,22 @@
         return new.isEmpty ? nil : new
       }
 
-      var end = false
-      while ¬end {
-        autoreleasepool {
-          guard let newData = read() else {
-            end = true
-            return
-          }
-          stream.append(newData)
-
-          while let lineEnd = stream.range(of: newLineData) {
-            let lineData = stream.subdata(in: (..<lineEnd.lowerBound).relative(to: stream))
-            stream.removeSubrange(..<lineEnd.upperBound)
-
-            guard let line = try? String(file: lineData, origin: nil) else {
-              unreachable()
+        var end = false
+        while ¬end {
+            autoreleasepool {
+                guard let newData = read() else {
+                    end = true
+                    return
+                }
+                stream.append(newData)
+                
+                guard let line = try? String(file: newData, origin: nil) else {
+                    unreachable()
+                }
+                output.append(line)
+                reportProgress(line)
             }
-
-            output.append(line + newLine)
-            reportProgress(line)
-          }
         }
-      }
 
       while process.isRunning {} // @exempt(from: tests)
 
